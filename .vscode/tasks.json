@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "upload code to robot",
+			"type": "shell",
+			"command": "pscp ${workspaceFolder}\\robot_code.script root@192.168.0.1:/programs/"
+		}
+	]
+}
