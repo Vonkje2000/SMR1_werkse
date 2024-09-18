@@ -1,0 +1,10 @@
+Used IP adresses
+.x camera
+.x arm
+
+
+robot buiten beeld
+...
+...
+
+... mm = table

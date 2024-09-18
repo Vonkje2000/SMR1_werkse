@@ -1,0 +1,95 @@
+def angleToAA(Angle):
+  arad = d2r(Angle+42)
+  rx = cos(0.5*arad)*3.1415
+  ry = sin(0.5*arad)*3.1415
+  return p[0,0,0,rx,ry,0]
+end
+
+#Connect to a cognex camera, tested on UR Firmware 3.3
+
+### Configuration of camera settings, adjust where needed ###
+port = 10000
+ip = "192.168.0.9"
+socket_name = "Cognex"
+
+### Connect to camera and return status ###
+socket = socket_open(ip, port, socket_name)    
+textmsg("Verbinding gelukt?: ", socket)
+
+
+### After connecting the camera first sends a welcome message and asks for username and password ###
+
+receive = socket_read_string(socket_name)
+textmsg(receive)
+
+socket_send_string("admin" , socket_name)
+socket_send_byte([13,10], socket_name)
+
+receive = socket_read_string(socket_name)
+textmsg(receive)
+  
+### UR / Cognex weirdness. You can't send the list of bytes if you have an empty string, so we just send them separately
+socket_send_string("", socket_name) # It is an empty string, you could skip this step
+
+socket_send_byte(13, socket_name)
+socket_send_byte(10, socket_name)
+
+receive = socket_read_string(socket_name)
+textmsg(receive)
+
+### Start workloop ###
+
+while (True) :
+  movel(pose_add(p[612/1000, 144/1000, 200/1000, 0, 0, 0], angleToAA(0)))
+  set_digital_out(0,True)
+
+  ### Trigger camera, only works if camera is in ONLINE mode
+
+  textmsg("Sending trigger")
+  socket_send_string("SW8", socket_name)
+  socket_send_byte([13,10], socket_name)
+
+  triggerstatus = socket_read_line(socket_name)
+
+  if triggerstatus == "1": 
+      textmsg("Trigger successful: ", triggerstatus)
+  else:
+      textmsg("Trigger failed: ", triggerstatus)
+  end
+  
+  sleep(1) #Just to be sure, this can probably be removed
+
+   ### Receive datastring from camera
+     textmsg("Requesting coordinates")
+
+    socket_send_string("GVC037", socket_name)
+    socket_send_byte([13,10], socket_name)
+    
+  getvaluestatus = socket_read_line(socket_name)
+
+  if getvaluestatus == "1" : 
+      textmsg("GetValue successful: ", getvaluestatus)
+  else:
+      textmsg("GetValue failed: ", getvaluestatus)
+  end
+  
+  sleep(1)
+  # Expected format of data string: “(x, y, z)” where x, y, and z are floats or integers
+    rec = socket_read_ascii_float(3, socket_name)
+
+  ### There is still some data remaining in the camera buffer, we should empty it.
+  buf = socket_read_string(socket_name)
+
+  ### Show the resulting list
+  textmsg("Received list:", rec)
+
+  
+  movel(pose_add(p[rec[1]/1000,rec[2]/1000,100/1000,0,0,0], angleToAA(rec[3])))
+  movel(pose_add(p[rec[1]/1000,rec[2]/1000,80/1000,0,0,0], angleToAA(rec[3])))
+  set_digital_out(0,False)
+  movel(pose_add(p[rec[1]/1000,rec[2]/1000,200/1000,0,0,0], angleToAA(rec[3])))
+
+end
+
+### If you break the loop and end the program, close the socket
+socket_close(socket_name)
