@@ -94,7 +94,7 @@ def get_data_from_cognex(cel_data):
     client_socket_write(socket, "SE8\r\n".encode())      #SE set event does work but does not wait
     wait(0.5)
 
-    triggerstatus = client_socket_read(socket, -1, -1)[1].decode()
+    triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
 
     if triggerstatus == "1":
         tp_log("Trigger successful: " + str(triggerstatus))
