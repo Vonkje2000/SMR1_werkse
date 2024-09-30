@@ -67,29 +67,6 @@ def move_until_feedback(_posx):
     #tp_log(str(force))
     return 0
 
-BL = posx(394.7, 415.5, 0,0,0,0)
-BR = posx(396.4, 717.2, 0,0,0,0)
-TL = posx( 96.6, 416.4, 0,0,0,0)
-TR = posx(100.4, 729.7, 0,0,0,0)
-
-#Zbottom = posx(0, 0, 65.9, 0, 0, 0)
-Zbottom = posx(0, 0, 85, 0, 0, 0)
-Z_10_CM_up = posx(0, 0, 100, 0, 0, 0)
-
-accelleration = 100
-velocity = 100
-
-def test():
-    get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
-    get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
-    get_to_point_by_angle(394.7, 415.5, 70, 180, 20, 2, True)
-    get_to_point_by_angle(394.7, 415.5, 70, 270, 20, 2, True)
-    return 0
-
-def function_test():
-    get_data_from_cognex('GVC013')
-    return 0
-
 def get_data_from_cognex(cel_data):
     ### Configuration of camera settings, adjust where needed ###
     port = 10000
@@ -113,7 +90,9 @@ def get_data_from_cognex(cel_data):
     #tp_log(str(receive))
 
     ### Trigger camera, only works if camera is in ONLINE mode
-    client_socket_write(socket, "SW8\r\n".encode())
+    #client_socket_write(socket, "SW8\r\n".encode())     #SW set event and wait gives an error and dont know why
+    client_socket_write(socket, "SE8\r\n".encode())      #SE set event does work but does not wait
+    wait(0.5)
 
     triggerstatus = client_socket_read(socket, -1, -1)[1].decode()
 
@@ -137,16 +116,41 @@ def get_data_from_cognex(cel_data):
     client_socket_close(socket)
     return 0
 
+def test():
+    get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
+    get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
+    get_to_point_by_angle(394.7, 415.5, 70, 180, 20, 2, True)
+    get_to_point_by_angle(394.7, 415.5, 70, 270, 20, 2, True)
+    return 0
+
+def function_test():
+    get_data_from_cognex('GVC013')
+    return 0
+
+# start of define variables of the code
+BL = posx(394.7, 415.5, 0,0,0,0)
+BR = posx(396.4, 717.2, 0,0,0,0)
+TL = posx( 96.6, 416.4, 0,0,0,0)
+TR = posx(100.4, 729.7, 0,0,0,0)
+
+#Zbottom = posx(0, 0, 65.9, 0, 0, 0)
+Zbottom = posx(0, 0, 85, 0, 0, 0)
+Z_10_CM_up = posx(0, 0, 100, 0, 0, 0)
+
+accelleration = 100
+velocity = 100
+# end of defined variables
+
+# start of the code
+tp_popup('Lookout robot arm starts homing.', pm_type=DR_PM_MESSAGE, button_type=1)
 move_home(DR_HOME_TARGET_USER)
 
-#rotate_head_angle(90)
-#movel(add_pose(add_pose(BL, posx(0,0,10,0,0,0)), add_pose(Zbottom, angleToAA(90))), vel=velocity, acc=accelleration)
-
 while True:
+    tp_popup('Start new soldering job?', pm_type=DR_PM_MESSAGE, button_type=0)
     #test()
-    #tp_popup('werkt dit?', pm_type=DR_PM_MESSAGE, button_type=0)
     function_test()
-    exit()
+    #exit()
+# end of the code
 
 #force_ext = get_tool_force(DR_WORLD)   # force_ext: external force of the tool based on the world coordinate
 #set_desired_force                      # force detection
