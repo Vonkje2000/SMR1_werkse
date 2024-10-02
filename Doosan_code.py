@@ -61,7 +61,7 @@ def move_until_feedback(_posx):
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
     #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
-    while (force < 1.5):
+    while (force < 1.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
     #tp_log(str(force))
