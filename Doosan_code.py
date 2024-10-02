@@ -116,6 +116,13 @@ def get_data_from_cognex(cel_data):
     client_socket_close(socket)
     return 0
 
+def calculate_offset_center(posx)
+    move_until_feedback(posx)
+    z1 = 80.89949 #pre determant value in mm 
+    z2 = get_actual_pose(posx,[2]) #pose in which the robot stops and take z value 
+    offset = (z1-z2)/tan(45/180*3.14) #calculate offset trough formula
+return offset
+
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
     get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
