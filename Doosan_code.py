@@ -61,7 +61,7 @@ def move_until_feedback(_posx):
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
     #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
-    while (force < 1.5):
+    while (force < 1.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
     #tp_log(str(force))
@@ -96,10 +96,9 @@ def get_data_from_cognex(cel_data):
 
     triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
 
-    if triggerstatus == "1":
-        tp_log("Trigger successful: " + str(triggerstatus))
-    else:
+    if triggerstatus != "1":
         tp_log("Trigger failed: " + str(triggerstatus))
+        return 0
 
     wait(1)  # Just to be sure, this can probably be removed
 
@@ -107,14 +106,16 @@ def get_data_from_cognex(cel_data):
     getvaluestatus, rec, _empty = str(client_socket_read(socket, -1, -1)[1].decode()).split("\r\n")
 
     if getvaluestatus == "1":
-        tp_log("GetValue successful: " + str(getvaluestatus))
+        #tp_log("GetValue successful: " + str(getvaluestatus))
+        rec = str(rec).split(",")
     else:
         tp_log("GetValue failed: " + str(getvaluestatus))
 
-    tp_log("Received list:" + str(str(rec).split(",")))
+    #tp_log("Received list:" + str(rec))
 
     client_socket_close(socket)
-    return 0
+    
+    return rec
 
 def add_vector_to_pos_xy(_pos, angle, distance):
     _pos[1] = _pos[1] + sin(d2r(_pos[2] + angle)) * distance
@@ -202,6 +203,10 @@ velocity = 100
 
 # start of the code
 tp_popup('Lookout robot arm starts homing.', pm_type=DR_PM_MESSAGE, button_type=1)
+boot_up_pos, _i = get_current_posx()
+boot_up_pos[2] += 40
+movel(boot_up_pos, vel=velocity, acc=accelleration)
+
 move_home(DR_HOME_TARGET_USER)
 
 while True:
@@ -209,6 +214,7 @@ while True:
     #test()
     function_test()
     #exit()
+    move_home(DR_HOME_TARGET_USER)
 # end of the code
 
 #force_ext = get_tool_force(DR_WORLD)   # force_ext: external force of the tool based on the world coordinate
