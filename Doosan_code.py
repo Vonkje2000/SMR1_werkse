@@ -154,6 +154,7 @@ while True:
     #test()
     function_test()
     #exit()
+    move_home(DR_HOME_TARGET_USER)
 # end of the code
 
 #force_ext = get_tool_force(DR_WORLD)   # force_ext: external force of the tool based on the world coordinate
