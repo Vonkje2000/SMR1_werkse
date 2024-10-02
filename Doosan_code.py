@@ -117,6 +117,64 @@ def get_data_from_cognex(cel_data):
     
     return rec
 
+def add_vector_to_pos_xy(_pos, angle, distance):
+    _pos[1] = _pos[1] + sin(d2r(_pos[2] + angle)) * distance
+    _pos[0] = _pos[0] + cos(d2r(_pos[2] + angle)) * distance
+    return _pos
+
+def soldeer():      #not functional
+    X_Y_R = get_data_from_cognex('GVC013')
+    if (X_Y_R == ['']):
+        tp_popup('No mold detected please place mold in the detectable square', pm_type=DR_PM_MESSAGE, button_type=1)
+        return 0
+    _pos_x = float(X_Y_R[0])
+    _pos_y = float(X_Y_R[1])
+    _pos_r = float(X_Y_R[2]) - 0.8
+    _pos = [_pos_x, _pos_y, _pos_r]
+    #tp_log("angle: " + str(_pos_r))
+
+    _pos = add_vector_to_pos_xy(_pos, 270, 15)
+    _pos = add_vector_to_pos_xy(_pos, 180, 10)
+
+    # measure point 1 height
+    _pos_1_measure = list(_pos)
+    _pos_1_measure = add_vector_to_pos_xy(_pos_1_measure, 180, 5)
+    rotate_head_angle(_pos_1_measure[2] + 180)
+    movel(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 100, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+    move_until_feedback(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 50, 0,0,0), angleToAA(_pos_1_measure[2] + 180)))
+    _pos_1, _i = get_current_posx()
+    _pos_1[3] = 0
+    _pos_1[4] = 0
+    _pos_1[5] = 0
+    movel(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 100, 0, 0, 0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+
+    # measure point 2 height
+    _pos_2_measure = add_vector_to_pos_xy(_pos_1_measure, 0, 170)
+    rotate_head_angle(_pos_1_measure[2])
+    movel(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 100, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+    move_until_feedback(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 50, 0, 0, 0), angleToAA(_pos_2_measure[2])))
+    _pos_2, _i = get_current_posx()
+    _pos_2[3] = 0
+    _pos_2[4] = 0
+    _pos_2[5] = 0
+    movel(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 100, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+
+    _z_offset = (_pos_1[2] - _pos_2[2])/8
+
+    get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*0, _pos[2] + 180, 10, 2, True)
+
+    for i in range(8):
+        _pos = add_vector_to_pos_xy(_pos, 0, 20)
+        get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*i, _pos[2] + 180, 10, 2, True)
+
+    _pos = add_vector_to_pos_xy(_pos, 0, 4)
+    get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*8, _pos[2], 10, 2, True)
+
+    for i in range(8):
+        _pos = add_vector_to_pos_xy(_pos, 180, 20)
+        get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*(8-i), _pos[2], 10, 2, True)
+    return 0
+
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
     get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
@@ -125,7 +183,8 @@ def test():
     return 0
 
 def function_test():
-    get_data_from_cognex('GVC013')
+    #get_data_from_cognex('GVC013')
+    soldeer()
     return 0
 
 # start of define variables of the code
