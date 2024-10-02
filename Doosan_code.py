@@ -96,10 +96,9 @@ def get_data_from_cognex(cel_data):
 
     triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
 
-    if triggerstatus == "1":
-        tp_log("Trigger successful: " + str(triggerstatus))
-    else:
+    if triggerstatus != "1":
         tp_log("Trigger failed: " + str(triggerstatus))
+        return 0
 
     wait(1)  # Just to be sure, this can probably be removed
 
@@ -107,14 +106,16 @@ def get_data_from_cognex(cel_data):
     getvaluestatus, rec, _empty = str(client_socket_read(socket, -1, -1)[1].decode()).split("\r\n")
 
     if getvaluestatus == "1":
-        tp_log("GetValue successful: " + str(getvaluestatus))
+        #tp_log("GetValue successful: " + str(getvaluestatus))
+        rec = str(rec).split(",")
     else:
         tp_log("GetValue failed: " + str(getvaluestatus))
 
-    tp_log("Received list:" + str(str(rec).split(",")))
+    #tp_log("Received list:" + str(rec))
 
     client_socket_close(socket)
-    return 0
+    
+    return rec
 
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
