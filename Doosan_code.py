@@ -143,6 +143,10 @@ velocity = 100
 
 # start of the code
 tp_popup('Lookout robot arm starts homing.', pm_type=DR_PM_MESSAGE, button_type=1)
+boot_up_pos, _i = get_current_posx()
+boot_up_pos[2] += 40
+movel(boot_up_pos, vel=velocity, acc=accelleration)
+
 move_home(DR_HOME_TARGET_USER)
 
 while True:
