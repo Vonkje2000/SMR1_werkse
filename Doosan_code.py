@@ -92,7 +92,7 @@ def get_data_from_cognex(cel_data):
     ### Trigger camera, only works if camera is in ONLINE mode
     #client_socket_write(socket, "SW8\r\n".encode())     #SW set event and wait gives an error and dont know why
     client_socket_write(socket, "SE8\r\n".encode())      #SE set event does work but does not wait
-    wait(0.5)
+    wait(3)
 
     triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
 
