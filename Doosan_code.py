@@ -61,7 +61,7 @@ def move_until_feedback(_posx):
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
     #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
-    while (force < 1.5):
+    while (force < 1.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
     #tp_log(str(force))
@@ -92,14 +92,13 @@ def get_data_from_cognex(cel_data):
     ### Trigger camera, only works if camera is in ONLINE mode
     #client_socket_write(socket, "SW8\r\n".encode())     #SW set event and wait gives an error and dont know why
     client_socket_write(socket, "SE8\r\n".encode())      #SE set event does work but does not wait
-    wait(0.5)
+    wait(3)
 
     triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
 
-    if triggerstatus == "1":
-        tp_log("Trigger successful: " + str(triggerstatus))
-    else:
+    if triggerstatus != "1":
         tp_log("Trigger failed: " + str(triggerstatus))
+        return 0
 
     wait(1)  # Just to be sure, this can probably be removed
 
@@ -107,13 +106,73 @@ def get_data_from_cognex(cel_data):
     getvaluestatus, rec, _empty = str(client_socket_read(socket, -1, -1)[1].decode()).split("\r\n")
 
     if getvaluestatus == "1":
-        tp_log("GetValue successful: " + str(getvaluestatus))
+        #tp_log("GetValue successful: " + str(getvaluestatus))
+        rec = str(rec).split(",")
     else:
         tp_log("GetValue failed: " + str(getvaluestatus))
 
-    tp_log("Received list:" + str(str(rec).split(",")))
+    #tp_log("Received list:" + str(rec))
 
     client_socket_close(socket)
+    
+    return rec
+
+def add_vector_to_pos_xy(_pos, angle, distance):
+    _pos[1] = _pos[1] + sin(d2r(_pos[2] + angle)) * distance
+    _pos[0] = _pos[0] + cos(d2r(_pos[2] + angle)) * distance
+    return _pos
+
+def soldeer():      #not functional
+    X_Y_R = get_data_from_cognex('GVC013')
+    if (X_Y_R == ['']):
+        tp_popup('No mold detected please place mold in the detectable square', pm_type=DR_PM_MESSAGE, button_type=1)
+        return 0
+    _pos_x = float(X_Y_R[0])
+    _pos_y = float(X_Y_R[1])
+    _pos_r = float(X_Y_R[2]) - 0.8
+    _pos = [_pos_x, _pos_y, _pos_r]
+    #tp_log("angle: " + str(_pos_r))
+
+    _pos = add_vector_to_pos_xy(_pos, 270, 15)
+    _pos = add_vector_to_pos_xy(_pos, 180, 10)
+
+    # measure point 1 height
+    _pos_1_measure = list(_pos)
+    _pos_1_measure = add_vector_to_pos_xy(_pos_1_measure, 180, 5)
+    rotate_head_angle(_pos_1_measure[2] + 180)
+    movel(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 100, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+    move_until_feedback(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 50, 0,0,0), angleToAA(_pos_1_measure[2] + 180)))
+    _pos_1, _i = get_current_posx()
+    _pos_1[3] = 0
+    _pos_1[4] = 0
+    _pos_1[5] = 0
+    movel(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 100, 0, 0, 0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+
+    # measure point 2 height
+    _pos_2_measure = add_vector_to_pos_xy(_pos_1_measure, 0, 170)
+    rotate_head_angle(_pos_1_measure[2])
+    movel(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 100, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+    move_until_feedback(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 50, 0, 0, 0), angleToAA(_pos_2_measure[2])))
+    _pos_2, _i = get_current_posx()
+    _pos_2[3] = 0
+    _pos_2[4] = 0
+    _pos_2[5] = 0
+    movel(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 100, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+
+    _z_offset = (_pos_1[2] - _pos_2[2])/8
+
+    get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*0, _pos[2] + 180, 10, 2, True)
+
+    for i in range(8):
+        _pos = add_vector_to_pos_xy(_pos, 0, 20)
+        get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*i, _pos[2] + 180, 10, 2, True)
+
+    _pos = add_vector_to_pos_xy(_pos, 0, 4)
+    get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*8, _pos[2], 10, 2, True)
+
+    for i in range(8):
+        _pos = add_vector_to_pos_xy(_pos, 180, 20)
+        get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*(8-i), _pos[2], 10, 2, True)
     return 0
 
 def calculate_offset_center(_posx)
@@ -126,7 +185,7 @@ def calculate_offset_center(_posx)
     z2 = _pos[2]
     offset = (z1-z2)/tan(45/180*3.14) # calculate offset trough formula
     return offset, z2
-
+  
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
     get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
@@ -135,7 +194,8 @@ def test():
     return 0
 
 def function_test():
-    get_data_from_cognex('GVC013')
+    #get_data_from_cognex('GVC013')
+    soldeer()
     return 0
 
 # start of define variables of the code
@@ -154,6 +214,10 @@ velocity = 100
 
 # start of the code
 tp_popup('Lookout robot arm starts homing.', pm_type=DR_PM_MESSAGE, button_type=1)
+boot_up_pos, _i = get_current_posx()
+boot_up_pos[2] += 40
+movel(boot_up_pos, vel=velocity, acc=accelleration)
+
 move_home(DR_HOME_TARGET_USER)
 
 while True:
@@ -161,6 +225,7 @@ while True:
     #test()
     function_test()
     #exit()
+    move_home(DR_HOME_TARGET_USER)
 # end of the code
 
 #force_ext = get_tool_force(DR_WORLD)   # force_ext: external force of the tool based on the world coordinate
