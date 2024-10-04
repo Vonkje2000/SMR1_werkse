@@ -117,6 +117,9 @@ def get_data_from_cognex(cel_data):
     return 0
 
 def calculate_offset_center(_posx)
+    _posx[2] = 100
+    movel(_posx, acc=accelleration, vel=velocity)
+    _posx[2] = 80
     move_until_feedback(_posx)
     z1 = 1.825575256347656 + 80.89949 #pre determant value in mm       # 1.825575256347656 is the value of hitting the table
     _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
