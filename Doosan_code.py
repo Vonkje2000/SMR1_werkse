@@ -121,11 +121,11 @@ def calculate_offset_center(_posx)
     movel(_posx, acc=accelleration, vel=velocity)
     _posx[2] = 80
     move_until_feedback(_posx)
-    z1 = 1.825575256347656 + 80.89949 #pre determant value in mm       # 1.825575256347656 is the value of hitting the table
+    z1 = 1.825575256347656 + 80.89949 # pre determant value in mm       # 1.825575256347656 is the value of hitting the table
     _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
     z2 = _pos[2]
-    offset = (z1-z2)/tan(45/180*3.14) #calculate offset trough formula
-return offset, z2
+    offset = (z1-z2)/tan(45/180*3.14) # calculate offset trough formula
+    return offset, z2
 
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
