@@ -175,6 +175,17 @@ def soldeer():      #not functional
         get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*(8-i), _pos[2], 10, 2, True)
     return 0
 
+def calculate_offset_center(_posx)
+    _posx[2] = 100
+    movel(_posx, acc=accelleration, vel=velocity)
+    _posx[2] = 80
+    move_until_feedback(_posx)
+    z1 = 1.825575256347656 + 80.89949 # pre determant value in mm       # 1.825575256347656 is the value of hitting the table
+    _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
+    z2 = _pos[2]
+    offset = (z1-z2)/tan(45/180*3.14) # calculate offset trough formula
+    return offset, z2
+  
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
     get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
