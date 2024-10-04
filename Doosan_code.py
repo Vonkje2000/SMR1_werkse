@@ -119,7 +119,8 @@ def get_data_from_cognex(cel_data):
 def calculate_offset_center(posx)
     move_until_feedback(posx)
     z1 = 80.89949 #pre determant value in mm 
-    z2 = get_actual_pose(posx,[2]) #pose in which the robot stops and take z value 
+    _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
+    z2 = _pos[2]
     offset = (z1-z2)/tan(45/180*3.14) #calculate offset trough formula
 return offset
 
