@@ -1,10 +1,6 @@
 Used IP adresses
-.x camera
-.x arm
+192.168.137.10 camera
+192.168.137.4 arm
+192.168.137.50 homberger hub
 
-
-robot buiten beeld
-...
-...
-
-... mm = table
+192.168.137.69  laptop 
