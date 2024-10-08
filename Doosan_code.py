@@ -193,7 +193,7 @@ def soldeer():
     return 0
 
 def calculate_offset_center(_posx)
-    _posx[2] = 100
+    _posx[2] = 95
     movel(_posx, acc=accelleration, vel=velocity)
     _posx[2] = 80
     move_until_feedback(_posx)
@@ -201,6 +201,19 @@ def calculate_offset_center(_posx)
     _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
     z2 = _pos[2]
     offset = (z1-z2)/tan(45/180*3.14) # calculate offset trough formula
+    return offset, z2
+
+def calculate_average_offset_center(_posx):
+    _offsets = []
+    _z_heights = []
+    for i in range(7):
+        _o, _z = calculate_offset_center(get_current_posx()[0])
+        _offsets.append(_o)
+        _z_heights.append(_z)
+    _offsets.sort()
+    z2 = sum(_offsets[1:-1]) / (len(_offsets) - 2)
+    _z_heights.sort()
+    offset = sum(_z_heights[1:-1]) / (len(_z_heights) - 2)
     return offset, z2
   
 def test():
@@ -211,7 +224,6 @@ def test():
     return 0
 
 def function_test():
-    #get_data_from_cognex('GVC013')
     soldeer()
     return 0
 
@@ -235,6 +247,11 @@ boot_up_pos, _i = get_current_posx()
 boot_up_pos[2] += 40
 movel(boot_up_pos, vel=velocity, acc=accelleration)
 
+move_home(DR_HOME_TARGET_USER)
+
+tp_popup('Lookout robot arm starts calibrating.', pm_type=DR_PM_MESSAGE, button_type=1)
+z_height, offset = calculate_average_offset_center(get_current_posx()[0])
+#tp_log("offset : " + str(offset) + " , z height : " + str(z_height))
 move_home(DR_HOME_TARGET_USER)
 
 while True:
