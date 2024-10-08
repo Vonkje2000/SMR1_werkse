@@ -61,7 +61,7 @@ def move_until_feedback(_posx):
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
     #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
-    while (force < 1.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
+    while (force < 2.0 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
     #tp_log(str(force))
@@ -192,7 +192,7 @@ def soldeer():
         get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 2, True)
     return 0
 
-def calculate_offset_center(_posx)
+def calculate_offset_center(_posx):
     _posx[2] = 95
     movel(_posx, acc=accelleration, vel=velocity)
     _posx[2] = 80
