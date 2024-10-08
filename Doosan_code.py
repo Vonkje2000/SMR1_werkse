@@ -20,7 +20,8 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
         move_until_feedback(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)))
     else:
         movel(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)), vel=30, acc=30)
-
+    
+    send_extrude_command()
     wait(_s_wait_time)
 
     #back to position on the side
@@ -116,7 +117,31 @@ def get_data_from_cognex(cel_data):
     client_socket_close(socket)
     
     return rec
+    
+def send_extrude_command(steps=10):
+    port = 4242
+    ip = "192.168.137.52"
 
+    socket = client_socket_open(ip, port)
+
+    client_socket_write(socket, "EXTRUDE\r\n".encode())
+    wait(0.5)
+
+    triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
+
+    if triggerstatus == "ACK":
+        tp_log("Trigger successful: " + str(triggerstatus))
+        client_socket_close(socket)
+        socket = client_socket_open(ip, port)
+        client_socket_write(socket, "15\r\n".encode())
+        client_socket_close(socket)
+    else:
+        tp_log("Trigger failed: " + str(triggerstatus))
+        client_socket_close(socket)
+    wait(1)
+
+    return 0
+    
 def add_vector_to_pos_xy(_pos, angle, distance):
     _pos[1] = _pos[1] + sin(d2r(_pos[2] + angle)) * distance
     _pos[0] = _pos[0] + cos(d2r(_pos[2] + angle)) * distance
@@ -183,6 +208,7 @@ def soldeer():
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 0, 20)
         get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 2, True)
+        
 
     _pos = add_vector_to_pos_xy(_pos, 0, 3)
     get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 2, True)
