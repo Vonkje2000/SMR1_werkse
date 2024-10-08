@@ -61,7 +61,7 @@ def move_until_feedback(_posx):
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
     #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
-    while (force < 1.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
+    while (force < 2.0 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
     #tp_log(str(force))
@@ -122,61 +122,78 @@ def add_vector_to_pos_xy(_pos, angle, distance):
     _pos[0] = _pos[0] + cos(d2r(_pos[2] + angle)) * distance
     return _pos
 
-def soldeer():      #not functional
-    X_Y_R = get_data_from_cognex('GVC013')
+def soldeer():
+    X_Y_R = get_data_from_cognex('GVC019')
     if (X_Y_R == ['']):
         tp_popup('No mold detected please place mold in the detectable square', pm_type=DR_PM_MESSAGE, button_type=1)
         return 0
+
     _pos_x = float(X_Y_R[0])
     _pos_y = float(X_Y_R[1])
-    _pos_r = float(X_Y_R[2]) - 0.8
-    _pos = [_pos_x, _pos_y, _pos_r]
-    #tp_log("angle: " + str(_pos_r))
+    _pos_r = float(X_Y_R[2])
+    _mold_number = int(X_Y_R[3])
 
-    _pos = add_vector_to_pos_xy(_pos, 270, 15)
-    _pos = add_vector_to_pos_xy(_pos, 180, 10)
+    if _mold_number == 0:
+        _pos_x += 0
+        _pos_y += 0
+        _pos_r += -0.8
+
+    if _mold_number == 1:
+        _pos_x += 0
+        _pos_y += 0
+        _pos_r += 0
+
+    _pos = [_pos_x, _pos_y, _pos_r]
+    #tp_log("number: " + str(_mold_number))
+    #tp_log("offset: " + str(offset))
+
+    _pos = add_vector_to_pos_xy(_pos, 270, 9)   # distance from data matrix to the aluminium
+    _pos = add_vector_to_pos_xy(_pos, 180, 10)  # distance from data matrix 90 degrees of to the aluminium
+
+    _offset_pos = add_vector_to_pos_xy([0,0,_pos_r], 0, offset)
+    _offset_pos_inverse = add_vector_to_pos_xy([0, 0, _pos_r], 180, offset)
 
     # measure point 1 height
     _pos_1_measure = list(_pos)
     _pos_1_measure = add_vector_to_pos_xy(_pos_1_measure, 180, 5)
     rotate_head_angle(_pos_1_measure[2] + 180)
-    movel(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 100, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
-    move_until_feedback(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 50, 0,0,0), angleToAA(_pos_1_measure[2] + 180)))
+    movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+    move_until_feedback(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], 50, 0,0,0), angleToAA(_pos_1_measure[2] + 180)))
     _pos_1, _i = get_current_posx()
     _pos_1[3] = 0
     _pos_1[4] = 0
     _pos_1[5] = 0
-    movel(add_pose(posx(_pos_1_measure[0], _pos_1_measure[1], 100, 0, 0, 0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+    movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20, 0, 0, 0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
 
     # measure point 2 height
-    _pos_2_measure = add_vector_to_pos_xy(_pos_1_measure, 0, 170)
+    _pos_2_measure = add_vector_to_pos_xy(_pos_1_measure, 0, 169)
     rotate_head_angle(_pos_1_measure[2])
-    movel(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 100, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
-    move_until_feedback(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 50, 0, 0, 0), angleToAA(_pos_2_measure[2])))
+    movel(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], z_height + 20, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+    move_until_feedback(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], 50, 0, 0, 0), angleToAA(_pos_2_measure[2])))
     _pos_2, _i = get_current_posx()
     _pos_2[3] = 0
     _pos_2[4] = 0
     _pos_2[5] = 0
-    movel(add_pose(posx(_pos_2_measure[0], _pos_2_measure[1], 100, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+    movel(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], z_height + 20, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
 
-    _z_offset = (_pos_1[2] - _pos_2[2])/8
+    _z_offset = (_pos_2[2] - _pos_1[2])/8
 
-    get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*0, _pos[2] + 180, 10, 2, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 2, True)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 0, 20)
-        get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*i, _pos[2] + 180, 10, 2, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 2, True)
 
-    _pos = add_vector_to_pos_xy(_pos, 0, 4)
-    get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*8, _pos[2], 10, 2, True)
+    _pos = add_vector_to_pos_xy(_pos, 0, 3)
+    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 2, True)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 180, 20)
-        get_to_point_by_angle(_pos[0], _pos[1], 85 + _z_offset*(8-i), _pos[2], 10, 2, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 2, True)
     return 0
 
-def calculate_offset_center(_posx)
-    _posx[2] = 100
+def calculate_offset_center(_posx):
+    _posx[2] = 95
     movel(_posx, acc=accelleration, vel=velocity)
     _posx[2] = 80
     move_until_feedback(_posx)
@@ -184,6 +201,19 @@ def calculate_offset_center(_posx)
     _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
     z2 = _pos[2]
     offset = (z1-z2)/tan(45/180*3.14) # calculate offset trough formula
+    return offset, z2
+
+def calculate_average_offset_center(_posx):
+    _offsets = []
+    _z_heights = []
+    for i in range(7):
+        _o, _z = calculate_offset_center(get_current_posx()[0])
+        _offsets.append(_o)
+        _z_heights.append(_z)
+    _offsets.sort()
+    z2 = sum(_offsets[1:-1]) / (len(_offsets) - 2)
+    _z_heights.sort()
+    offset = sum(_z_heights[1:-1]) / (len(_z_heights) - 2)
     return offset, z2
   
 def test():
@@ -194,7 +224,6 @@ def test():
     return 0
 
 def function_test():
-    #get_data_from_cognex('GVC013')
     soldeer()
     return 0
 
@@ -218,6 +247,11 @@ boot_up_pos, _i = get_current_posx()
 boot_up_pos[2] += 40
 movel(boot_up_pos, vel=velocity, acc=accelleration)
 
+move_home(DR_HOME_TARGET_USER)
+
+tp_popup('Lookout robot arm starts calibrating.', pm_type=DR_PM_MESSAGE, button_type=1)
+z_height, offset = calculate_average_offset_center(get_current_posx()[0])
+#tp_log("offset : " + str(offset) + " , z height : " + str(z_height))
 move_home(DR_HOME_TARGET_USER)
 
 while True:
