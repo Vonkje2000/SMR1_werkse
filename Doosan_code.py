@@ -6,6 +6,7 @@ def angleToAA(Angle):
     return posx(0,0,0,0,180,Angle + degrees_offset_to_zero)
 
 def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_time, force_feedback):
+    check_extrude_connection()
     y_offset = sin(_Angle/180*3.14)*_distance
     x_offset = cos(_Angle/180*3.14)*_distance
 
@@ -117,8 +118,8 @@ def get_data_from_cognex(cel_data):
     client_socket_close(socket)
     
     return rec
-    
-def send_extrude_command(steps=10):
+
+def check_extrude_connection():
     port = 4242
     ip = "192.168.137.52"
 
@@ -132,13 +133,20 @@ def send_extrude_command(steps=10):
     if triggerstatus == "ACK":
         tp_log("Trigger successful: " + str(triggerstatus))
         client_socket_close(socket)
-        socket = client_socket_open(ip, port)
-        client_socket_write(socket, "15\r\n".encode())
-        client_socket_close(socket)
+        return 1
     else:
         tp_log("Trigger failed: " + str(triggerstatus))
         client_socket_close(socket)
-    wait(1)
+        return 0
+
+def send_extrude_command(steps=10):
+    port = 4242
+    ip = "192.168.137.52"
+
+    socket = client_socket_open(ip, port)
+
+    client_socket_write(socket, "15\r\n".encode())
+    client_socket_close(socket)
 
     return 0
     
@@ -203,19 +211,19 @@ def soldeer():
 
     _z_offset = (_pos_2[2] - _pos_1[2])/8
 
-    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 2, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 0.1, True)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 0, 20)
-        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 2, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 0.1, True)
         
 
     _pos = add_vector_to_pos_xy(_pos, 0, 3)
-    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 2, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 0.1, True)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 180, 20)
-        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 2, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 0.1, True)
     return 0
 
 def calculate_offset_center(_posx):
