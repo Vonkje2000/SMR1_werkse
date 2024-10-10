@@ -258,7 +258,7 @@ def test():
     return 0
 
 def function_test():
-    soldeer()
+    
     return 0
 
 # start of define variables of the code
@@ -291,8 +291,8 @@ move_home(DR_HOME_TARGET_USER)
 while True:
     tp_popup('Start new soldering job?', pm_type=DR_PM_MESSAGE, button_type=0)
     #test()
-    function_test()
-    #exit()
+    #function_test()
+    soldeer()
     move_home(DR_HOME_TARGET_USER)
 # end of the code
 
