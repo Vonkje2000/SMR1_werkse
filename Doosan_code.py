@@ -211,19 +211,19 @@ def soldeer():
 
     _z_offset = (_pos_2[2] - _pos_1[2])/8
 
-    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 0.1, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 2, True)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 0, 20)
-        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 0.1, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 2, True)
         
 
     _pos = add_vector_to_pos_xy(_pos, 0, 3)
-    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 0.1, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 2, True)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 180, 20)
-        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 0.1, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 2, True)
     return 0
 
 def calculate_offset_center(_posx):
