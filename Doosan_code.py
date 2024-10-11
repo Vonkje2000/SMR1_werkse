@@ -1,10 +1,12 @@
 from DRCF import *
 
+### function to change the direction of the head without changing the other rotations because it is only needed to rotate 1 axis ###
 degrees_offset_to_zero = 90
 def angleToAA(Angle):
     Angle *= -1
     return posx(0,0,0,0,180,Angle + degrees_offset_to_zero)
 
+### function to get to a point in a 45 degree angle this also triggers the extrude command to solder ###
 def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_time, force_feedback):
     y_offset = sin(_Angle/180*3.14)*_distance
     x_offset = cos(_Angle/180*3.14)*_distance
@@ -29,6 +31,8 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
     movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
     return 0
 
+### because the robot can try to rotate outside the limit of 360 to -360 degrees and then generate an error ###
+### this function remembers the angle of the head and then makes waypoint in a direction the head can rotate ###
 head_angle = 180
 def rotate_head_angle(Angle):
     global head_angle
@@ -58,6 +62,7 @@ def rotate_head_angle(Angle):
         movel(add_pose(arm_position, angleToAA(head_angle)), vel=30, acc=30)
     return 0
 
+### this function moves the robot to a specified location and stops when it is there or when it has force feedback ###
 def move_until_feedback(_posx):
     amovel(_posx, vel=5, acc=1)
     default_force = get_external_torque()[1]
@@ -69,6 +74,7 @@ def move_until_feedback(_posx):
     #tp_log(str(force))
     return 0
 
+### Function for the communication with the cognex camera ###
 def get_data_from_cognex(cel_data):
     ### turn light on ###
     set_mode_analog_output(ch=1, mod=DR_ANALOG_CURRENT)  # out ch1 = current mode
@@ -127,6 +133,7 @@ def get_data_from_cognex(cel_data):
     
     return rec
 
+### function to send an amount of steps that the stepper on the ESP32 can rotate ###
 def send_extrude_command(steps=10):
     port = 4242
     ip = "192.168.137.52"
@@ -140,12 +147,14 @@ def send_extrude_command(steps=10):
     client_socket_close(socket)
 
     return 0
-    
+
+### function to add a vector to a XY position ###
 def add_vector_to_pos_xy(_pos, angle, distance):
     _pos[1] = _pos[1] + sin(d2r(_pos[2] + angle)) * distance
     _pos[0] = _pos[0] + cos(d2r(_pos[2] + angle)) * distance
     return _pos
 
+### function that uses all the other functions to do a compleet solder job ###
 def soldeer():
     X_Y_R = get_data_from_cognex('GVC019')
     if (X_Y_R == ['']):
@@ -217,6 +226,7 @@ def soldeer():
         get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 2, True)
     return 0
 
+### Function to measure and calculate the offset of the tip of the solder iron from the perfect centre of the flench ###
 def calculate_offset_center(_posx):
     _posx[2] = 95
     movel(_posx, acc=accelleration, vel=velocity)
@@ -228,6 +238,7 @@ def calculate_offset_center(_posx):
     offset = (z1-z2)/tan(45/180*3.14) # calculate offset trough formula
     return offset, z2
 
+### sometimes the robot is not that accurate so this function calculates the average offset ###
 def calculate_average_offset_center(_posx):
     _offsets = []
     _z_heights = []
@@ -240,7 +251,8 @@ def calculate_average_offset_center(_posx):
     _z_heights.sort()
     offset = sum(_z_heights[1:-1]) / (len(_z_heights) - 2)
     return offset, z2
-  
+
+### function that can be called to test some lines of code ###
 def test():
     get_to_point_by_angle(394.7, 415.5, 70,   0, 20, 2, True)
     get_to_point_by_angle(394.7, 415.5, 70,  90, 20, 2, True)
@@ -248,6 +260,7 @@ def test():
     get_to_point_by_angle(394.7, 415.5, 70, 270, 20, 2, True)
     return 0
 
+### function that can be called to test some functions ###
 def function_test():
     
     return 0
