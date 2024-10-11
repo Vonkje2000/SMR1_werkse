@@ -15,7 +15,7 @@ WiFiServer server(4242);
 
 IPAddress local_IP(192, 168, 137, 40);
 IPAddress gateway(192, 168, 137, 1);
-IPAddress subnet(255, 255, 0, 0);
+IPAddress subnet(255, 255, 255, 0);
 int status = 0;
 void setup() {
   Serial.begin(115200);
