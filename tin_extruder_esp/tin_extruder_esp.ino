@@ -15,7 +15,7 @@ WiFiServer server(4242);
 
 IPAddress local_IP(192, 168, 137, 40);
 IPAddress gateway(192, 168, 137, 1);
-IPAddress subnet(255, 255, 255, 0);
+IPAddress subnet(255, 255, 0, 0);
 int status = 0;
 void setup() {
   Serial.begin(115200);
@@ -99,7 +99,7 @@ void loop() {
     delayMicroseconds(500);
   }
   while (digitalRead(F_RVE) == HIGH) {
-    digitalWrite(DIR, 1);  // Forward
+    digitalWrite(DIR, 1);  // Reverse
     digitalWrite(STEP, 1);
     delayMicroseconds(500);
     digitalWrite(STEP, 0);
@@ -134,10 +134,9 @@ void loop() {
         }
       }
     }
-    client.stop();
   }
+  client.stop();
 
   Serial.println("Client Disconnected");
-}
-ArduinoOTA.handle();
+  ArduinoOTA.handle();
 }
