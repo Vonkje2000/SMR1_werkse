@@ -6,7 +6,6 @@ def angleToAA(Angle):
     return posx(0,0,0,0,180,Angle + degrees_offset_to_zero)
 
 def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_time, force_feedback):
-    check_extrude_connection()
     y_offset = sin(_Angle/180*3.14)*_distance
     x_offset = cos(_Angle/180*3.14)*_distance
 
@@ -22,8 +21,9 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
     else:
         movel(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)), vel=30, acc=30)
     
-    send_extrude_command()
+    send_extrude_command(100)
     wait(_s_wait_time)
+    send_extrude_command(-100)
 
     #back to position on the side
     movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
@@ -70,6 +70,10 @@ def move_until_feedback(_posx):
     return 0
 
 def get_data_from_cognex(cel_data):
+    ### turn light on ###
+    set_mode_analog_output(ch=1, mod=DR_ANALOG_CURRENT)  # out ch1 = current mode
+    set_analog_output(ch=1, val=20.0)
+    
     ### Configuration of camera settings, adjust where needed ###
     port = 10000
     ip = "192.168.137.10"
@@ -116,28 +120,12 @@ def get_data_from_cognex(cel_data):
     #tp_log("Received list:" + str(rec))
 
     client_socket_close(socket)
+
+    ### turn light off ###
+    set_mode_analog_output(ch=1, mod=DR_ANALOG_VOLTAGE)  # out ch1 = voltage mode
+    set_analog_output(ch=1, val=0.1)
     
     return rec
-
-def check_extrude_connection():
-    port = 4242
-    ip = "192.168.137.52"
-
-    socket = client_socket_open(ip, port)
-
-    client_socket_write(socket, "EXTRUDE\r\n".encode())
-    wait(0.5)
-
-    triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
-
-    if triggerstatus == "ACK":
-        tp_log("Trigger successful: " + str(triggerstatus))
-        client_socket_close(socket)
-        return 1
-    else:
-        tp_log("Trigger failed: " + str(triggerstatus))
-        client_socket_close(socket)
-        return 0
 
 def send_extrude_command(steps=10):
     port = 4242
@@ -145,7 +133,10 @@ def send_extrude_command(steps=10):
 
     socket = client_socket_open(ip, port)
 
-    client_socket_write(socket, "15\r\n".encode())
+    client_socket_write(socket, (str(steps) + "\r\n").encode())
+
+    status = client_socket_read(socket, -1, -1)[1].decode()
+    
     client_socket_close(socket)
 
     return 0
@@ -276,6 +267,9 @@ velocity = 100
 # end of defined variables
 
 # start of the code
+set_mode_analog_output(ch=1, mod=DR_ANALOG_VOLTAGE)  # out ch1 = voltage mode
+set_analog_output(ch=1, val=0.1)
+
 tp_popup('Lookout robot arm starts homing.', pm_type=DR_PM_MESSAGE, button_type=1)
 boot_up_pos, _i = get_current_posx()
 boot_up_pos[2] += 40
