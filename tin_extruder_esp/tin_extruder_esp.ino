@@ -32,8 +32,8 @@ void setup() {
   }
   pinMode(STEP, OUTPUT);
   pinMode(DIR, OUTPUT);
-  pinMode(F_FWD, INPUT_PULLUP);
-  pinMode(F_RVE, INPUT_PULLUP);
+  pinMode(F_FWD, INPUT);
+  pinMode(F_RVE, INPUT);
   digitalWrite(DIR, 0);  // Set Man Forward
   // Port defaults to 3232
   // ArduinoOTA.setPort(3232);
@@ -133,10 +133,10 @@ void loop() {
           client.println("DONE");
         }
       }
+      client.stop();
+      Serial.println("Client Disconnected");
     }
   }
-  client.stop();
 
-  Serial.println("Client Disconnected");
   ArduinoOTA.handle();
 }
