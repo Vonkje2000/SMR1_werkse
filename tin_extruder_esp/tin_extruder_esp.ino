@@ -94,27 +94,28 @@ void loop() {
   while (digitalRead(F_FWD) == HIGH) {
     digitalWrite(DIR, 0);  // Forward
     digitalWrite(STEP, 1);
-    delayMicroseconds(500);
+    delay(50);
     digitalWrite(STEP, 0);
-    delayMicroseconds(500);
+    delay(50);
   }
   while (digitalRead(F_RVE) == HIGH) {
     digitalWrite(DIR, 1);  // Reverse
     digitalWrite(STEP, 1);
-    delayMicroseconds(500);
+    delay(50);
     digitalWrite(STEP, 0);
-    delayMicroseconds(500);
+    delay(50);
   }
   if (client) {
     Serial.println("New Client Connected");
-
     while (client.connected()) {
       if (client.available()) {
+        // String feed = client.readStringUntil('\n');
         String command = client.readStringUntil('\n');
         command.trim();
-
+        
         int steps = command.toInt();
-
+        int feedRate = 5;
+        Serial.println(steps);
         // Process the command
         if (steps != 0) {
           if (steps > 0) {
@@ -126,15 +127,16 @@ void loop() {
 
           for (int i = 0; i < steps; i++) {
             digitalWrite(STEP, 1);
-            delay(1);
+            delay(feedRate);
             digitalWrite(STEP, 0);
-            delay(1);
+            delay(feedRate);
           }
-          client.println("DONE");
         }
+        Serial.println("Done");
+        client.println("DONE");
+        client.stop();
+        Serial.println("Client Disconnected");
       }
-      client.stop();
-      Serial.println("Client Disconnected");
     }
   }
 
