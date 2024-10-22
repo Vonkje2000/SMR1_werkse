@@ -11,28 +11,28 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
     y_offset = sin(_Angle/180*3.14)*_distance
     x_offset = cos(_Angle/180*3.14)*_distance
 
-    #set rotation of the head
+    # set rotation of the head
     rotate_head_angle(_Angle)
 
-    #position to the side
+    # position to the side
     movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
 
-    async_send_extrude_command(100)   #80
-    #final position
+    async_send_extrude_command(100)   # 80
+    # final position
     if(force_feedback):
         move_until_feedback(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)))
     else:
         movel(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)), vel=5, acc=1)
     
     wait(_s_wait_time / 5 * 1)
-    send_extrude_command(100)   #80
+    send_extrude_command(100)   # 80
     wait(_s_wait_time / 5 * 1)
-    send_extrude_command(100)   #80
+    send_extrude_command(100)   # 80
     wait(_s_wait_time / 5 * 1)
     wait(_s_wait_time / 5 * 1)
     wait(_s_wait_time / 5 * 1)
 
-    #back to position on the side
+    # back to position on the side
     movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
     return 0
 
@@ -42,7 +42,7 @@ head_angle = 180
 def rotate_head_angle(Angle):
     global head_angle
     max_degrees = 360
-    #min_degrees = -100
+    # min_degrees = -100
     min_degrees = 0
     arm_position, _i = get_current_posx()
     arm_position[3] = 0
@@ -72,11 +72,11 @@ def move_until_feedback(_posx):
     amovel(_posx, vel=5, acc=1)
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
-    #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
+    # while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    # 1.5 = force    kg/10
     while (force < 2.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
-    #tp_log(str(force))
+    # tp_log(str(force))
     return 0
 
 ### Function for the communication with the cognex camera ###
@@ -94,21 +94,21 @@ def get_data_from_cognex(cel_data):
 
     ### After connecting the camera first sends a welcome message and asks for username and password ###
     receive = client_socket_read(socket, -1, -1)[1].decode()
-    #tp_log(str(receive))
-    client_socket_write(socket, "admin\r\n".encode())   #username + carage return, new line character
+    # tp_log(str(receive))
+    client_socket_write(socket, "admin\r\n".encode())   # username + carage return, new line character
 
     ### Asked for a password ###
     receive = client_socket_read(socket, -1, -1)[1].decode()
-    #tp_log(str(receive))
-    client_socket_write(socket, "\r\n".encode())        #password(empty) + carage return, new line character
+    # tp_log(str(receive))
+    client_socket_write(socket, "\r\n".encode())        # password(empty) + carage return, new line character
 
     ### user logged IN message ###
     receive = client_socket_read(socket, -1, -1)[1].decode()
-    #tp_log(str(receive))
+    # tp_log(str(receive))
 
     ### Trigger camera, only works if camera is in ONLINE mode
-    #client_socket_write(socket, "SW8\r\n".encode())     #SW set event and wait gives an error and dont know why
-    client_socket_write(socket, "SE8\r\n".encode())      #SE set event does work but does not wait
+    # client_socket_write(socket, "SW8\r\n".encode())     # SW set event and wait gives an error and dont know why
+    client_socket_write(socket, "SE8\r\n".encode())      # SE set event does work but does not wait
     wait(3)
 
     triggerstatus = client_socket_read(socket, -1, -1)[1].decode()[:-2]
@@ -119,16 +119,16 @@ def get_data_from_cognex(cel_data):
 
     wait(1)  # Just to be sure, this can probably be removed
 
-    client_socket_write(socket, (cel_data + "\r\n").encode())   #GVC013
+    client_socket_write(socket, (cel_data + "\r\n").encode())   # GVC013
     getvaluestatus, rec, _empty = str(client_socket_read(socket, -1, -1)[1].decode()).split("\r\n")
 
     if getvaluestatus == "1":
-        #tp_log("GetValue successful: " + str(getvaluestatus))
+        # tp_log("GetValue successful: " + str(getvaluestatus))
         rec = str(rec).split(",")
     else:
         tp_log("GetValue failed: " + str(getvaluestatus))
 
-    #tp_log("Received list:" + str(rec))
+    # tp_log("Received list:" + str(rec))
 
     client_socket_close(socket)
 
@@ -200,8 +200,8 @@ def soldeer():
         _pos_r += 0
 
     _pos = [_pos_x, _pos_y, _pos_r]
-    #tp_log("number: " + str(_mold_number))
-    #tp_log("offset: " + str(offset))
+    # tp_log("number: " + str(_mold_number))
+    # tp_log("offset: " + str(offset))
 
     if _mold_number == 0 or _mold_number == 1:
         _pos = add_vector_to_pos_xy(_pos, 270, 9)  # distance from data matrix to the aluminium
@@ -279,8 +279,8 @@ def calculate_average_offset_center(_posx):
     offset = sum(_offsets[1:-1]) / (len(_offsets) - 2)
     _z_heights.sort()
     z2 = sum(_z_heights[1:-1]) / (len(_z_heights) - 2)
-    #z2 += 8        # only for the solder iron with the flat side down
-    #offset -= 4
+    # z2 += 8        # only for the solder iron with the flat side down
+    # offset -= 4
     z2 += 4        # only for the solder iron with the flat side
     offset -= 2
     return offset, z2
@@ -304,7 +304,7 @@ BR = posx(396.4, 717.2, 0,0,0,0)
 TL = posx( 96.6, 416.4, 0,0,0,0)
 TR = posx(100.4, 729.7, 0,0,0,0)
 
-#Zbottom = posx(0, 0, 65.9, 0, 0, 0)
+# Zbottom = posx(0, 0, 65.9, 0, 0, 0)
 Zbottom = posx(0, 0, 85, 0, 0, 0)
 Z_10_CM_up = posx(0, 0, 100, 0, 0, 0)
 
@@ -326,7 +326,7 @@ move_home(DR_HOME_TARGET_USER)
 
 tp_popup('Lookout robot arm starts calibrating.', pm_type=DR_PM_MESSAGE, button_type=1)
 offset, z_height = calculate_average_offset_center(get_current_posx()[0])
-#tp_log("offset : " + str(offset) + " , z height : " + str(z_height))
+# tp_log("offset : " + str(offset) + " , z height : " + str(z_height))
 move_home(DR_HOME_TARGET_USER)
 
 one_time_flag = True
@@ -345,18 +345,18 @@ while True:
             move_home(DR_HOME_TARGET_USER)
             tp_popup('Continue soldering job?', pm_type=DR_PM_MESSAGE, button_type=0)
 
-    #test()
-    #function_test()
+    # test()
+    # function_test()
     soldeer()
     move_home(DR_HOME_TARGET_USER)
 # end of the code
 
-#force_ext = get_tool_force(DR_WORLD)   # force_ext: external force of the tool based on the world coordinate
-#set_desired_force                      # force detection
-#set_tool_digital_output                # control output on tool head
-#set_mode_analog_output                 # for variable output control
-#tp_popup                               # pop up on touch pendent
-#tp_log                                 # log to the log file
-#d2r(x)                                 # convert degrees to radials
-#client_socket_open                     # open tcp socket
-#External Vision Commands
+# force_ext = get_tool_force(DR_WORLD)   # force_ext: external force of the tool based on the world coordinate
+# set_desired_force                      # force detection
+# set_tool_digital_output                # control output on tool head
+# set_mode_analog_output                 # for variable output control
+# tp_popup                               # pop up on touch pendent
+# tp_log                                 # log to the log file
+# d2r(x)                                 # convert degrees to radials
+# client_socket_open                     # open tcp socket
+# External Vision Commands
