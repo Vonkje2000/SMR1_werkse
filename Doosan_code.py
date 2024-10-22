@@ -22,7 +22,7 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
     if(force_feedback):
         move_until_feedback(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)))
     else:
-        movel(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)), vel=30, acc=30)
+        movel(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)), vel=5, acc=1)
     
     wait(_s_wait_time / 5 * 1)
     send_extrude_command(100)   #80
@@ -73,7 +73,7 @@ def move_until_feedback(_posx):
     default_force = get_external_torque()[1]
     force = get_external_torque()[1] - default_force
     #while (forces[2] < 1.5 and get_current_posx()[0][2] <= _posx[2]+0.2):    #1.5 = force    kg/10
-    while (force < 2.0 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
+    while (force < 2.5 and check_motion() != 0):        # keep moving until the force equals 1.5 newton (150 grams) or it reaches the end position
         force = get_external_torque()[1] - default_force
     stop(DR_SSTOP)
     #tp_log(str(force))
@@ -84,7 +84,7 @@ def get_data_from_cognex(cel_data):
     ### turn light on ###
     set_mode_analog_output(ch=1, mod=DR_ANALOG_CURRENT)  # out ch1 = current mode
     set_analog_output(ch=1, val=20.0)
-    
+
     ### Configuration of camera settings, adjust where needed ###
     port = 10000
     ip = "192.168.137.10"
@@ -135,20 +135,20 @@ def get_data_from_cognex(cel_data):
     ### turn light off ###
     set_mode_analog_output(ch=1, mod=DR_ANALOG_VOLTAGE)  # out ch1 = voltage mode
     set_analog_output(ch=1, val=0.1)
-    
+
     return rec
 
 ### function to send an amount of steps that the stepper on the ESP32 can rotate ###
 def send_extrude_command(steps=10):
     port = 4242
-    ip = "192.168.137.52"
+    ip = "192.168.137.40"
 
     socket = client_socket_open(ip, port)
 
     client_socket_write(socket, (str(steps) + "\r\n").encode())
 
     status = client_socket_read(socket, -1, -1)[1].decode()
-    
+
     client_socket_close(socket)
 
     return 0
@@ -217,7 +217,7 @@ def soldeer():
 
     # measure point 1 height
     _pos_1_measure = list(_pos)
-    _pos_1_measure = add_vector_to_pos_xy(_pos_1_measure, 180, 5)
+    _pos_1_measure = add_vector_to_pos_xy(_pos_1_measure, 180, 3.0)
     rotate_head_angle(_pos_1_measure[2] + 180)
     movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
     move_until_feedback(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], 50, 0,0,0), angleToAA(_pos_1_measure[2] + 180)))
@@ -240,19 +240,19 @@ def soldeer():
 
     _z_offset = (_pos_2[2] - _pos_1[2])/8
 
-    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 20, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 20, False)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 0, 20)
-        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 20, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 20, False)
         
     _pos = add_vector_to_pos_xy(_pos, 90, 4)  # distance from data matrix to the aluminium
     _pos = add_vector_to_pos_xy(_pos, 0, 4)
-    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 20, True)
+    get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 20, False)
 
     for i in range(8):
         _pos = add_vector_to_pos_xy(_pos, 180, 20)
-        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 20, True)
+        get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 20, False)
     return 0
 
 ### Function to measure and calculate the offset of the tip of the solder iron from the perfect centre of the flench ###
@@ -295,7 +295,7 @@ def test():
 
 ### function that can be called to test some functions ###
 def function_test():
-    
+
     return 0
 
 # start of define variables of the code
