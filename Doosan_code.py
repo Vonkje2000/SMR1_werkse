@@ -17,7 +17,7 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
     # position to the side
     movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
 
-    async_send_extrude_command(100)   # 80
+    async_send_extrude_command(230)   # 130
     # final position
     if(force_feedback):
         move_until_feedback(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)))
@@ -25,15 +25,17 @@ def get_to_point_by_angle(_pos_x, _pos_y, _pos_z, _Angle, _distance, _s_wait_tim
         movel(add_pose(posx(_pos_x           , _pos_y           , _pos_z            , 0, 0, 0), angleToAA(_Angle)), vel=5, acc=1)
     
     wait(_s_wait_time / 5 * 1)
-    send_extrude_command(100)   # 80
+    send_extrude_command(250)   # 100
     wait(_s_wait_time / 5 * 1)
-    send_extrude_command(100)   # 80
+    #send_extrude_command(100)   # 100
     wait(_s_wait_time / 5 * 1)
     wait(_s_wait_time / 5 * 1)
     wait(_s_wait_time / 5 * 1)
 
     # back to position on the side
-    movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
+    #movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity, acc=accelleration)
+    # movel(add_pose(posx(_pos_x + x_offset, _pos_y + y_offset, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity * 2, acc=accelleration * 2)
+    movel(add_pose(posx(_pos_x, _pos_y, _pos_z + _distance, 0, 0, 0), angleToAA(_Angle)), vel=velocity * 3, acc=accelleration * 3)
     return 0
 
 ### because the robot can try to rotate outside the limit of 360 to -360 degrees and then generate an error ###
@@ -183,75 +185,96 @@ def soldeer():
     _pos_y = float(X_Y_R[1])
     _pos_r = float(X_Y_R[2])
     _mold_number = int(X_Y_R[3])
+    _pos_z_offset = 0
 
     if _mold_number == 0:
         _pos_x += 0
         _pos_y += 0
-        _pos_r += -1.5           # - degrees is rotating clockwise, + degrees is rotating anti clockwise
+        _pos_r += -0.5           # - degrees is rotating clockwise, + degrees is rotating anti clockwise
+        _pos_z_offset = 10
 
-    if _mold_number == 1:
-        _pos_x += 0
-        _pos_y += 0
-        _pos_r += 0
+    #if _mold_number == 1:
+    #    _pos_x += 0
+    #    _pos_y += 0
+    #    _pos_r += 0
 
-    if _mold_number == 2:
+    #if _mold_number == 2:
+    #    _pos_x += 0
+    #    _pos_y += 0
+    #    _pos_r += 0
+
+    if _mold_number == 3:
         _pos_x += 0
-        _pos_y += 0
         _pos_r += 0
+        _pos_y += 0
+        _pos_r += -0.5
+        _pos_z_offset = 10
 
     _pos = [_pos_x, _pos_y, _pos_r]
     # tp_log("number: " + str(_mold_number))
     # tp_log("offset: " + str(offset))
 
-    if _mold_number == 0 or _mold_number == 1:
-        _pos = add_vector_to_pos_xy(_pos, 270, 9)  # distance from data matrix to the aluminium
-        _pos = add_vector_to_pos_xy(_pos, 180, 13)  # distance from data matrix 90 degrees of to the aluminium
-    elif _mold_number == 2:
-        _pos = add_vector_to_pos_xy(_pos, 270, -49)  # distance from data matrix to the aluminium needs to be negative. the metrix is at the other side
-        _pos = add_vector_to_pos_xy(_pos, 180, 15)  # distance from data matrix 90 degrees of to the aluminium
+    if _mold_number == 0:
+        _pos = add_vector_to_pos_xy(_pos, 270, -51)  # distance from data matrix to the aluminium needs to be negative. the metrix is at the other side
+        _pos = add_vector_to_pos_xy(_pos, 180, 14)  # distance from data matrix 90 degrees of to the aluminium
+    #elif _mold_number == 1:
+    #    _pos = add_vector_to_pos_xy(_pos, 270, 9)  # distance from data matrix to the aluminium
+    #    _pos = add_vector_to_pos_xy(_pos, 180, 13)  # distance from data matrix 90 degrees of to the aluminium
+    #elif _mold_number == 2:
+    #    _pos = add_vector_to_pos_xy(_pos, 270, -49)  # distance from data matrix to the aluminium needs to be negative. the metrix is at the other side
+    #    _pos = add_vector_to_pos_xy(_pos, 180, 15)  # distance from data matrix 90 degrees of to the aluminium
+    elif _mold_number == 3:
+        _pos = add_vector_to_pos_xy(_pos, 270, -51)  # distance from data matrix to the aluminium needs to be negative. the metrix is at the other side
+        _pos = add_vector_to_pos_xy(_pos, 180, 14)  # distance from data matrix 90 degrees of to the aluminium
     else:
+        tp_popup('The detected mold is not calibrated. Please use another mold.', pm_type=DR_PM_MESSAGE, button_type=1)
         return 0
 
-    _offset_pos = add_vector_to_pos_xy([0,0,_pos_r], 0, offset)
+    _offset_pos = add_vector_to_pos_xy([0, 0, _pos_r], 0, offset)
     _offset_pos_inverse = add_vector_to_pos_xy([0, 0, _pos_r], 180, offset)
 
     # measure point 1 height
     _pos_1_measure = list(_pos)
     _pos_1_measure = add_vector_to_pos_xy(_pos_1_measure, 180, 3.0)
     rotate_head_angle(_pos_1_measure[2] + 180)
-    movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+    movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20 + _pos_z_offset, 0,0,0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
     move_until_feedback(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], 50, 0,0,0), angleToAA(_pos_1_measure[2] + 180)))
     _pos_1, _i = get_current_posx()
     _pos_1[3] = 0
     _pos_1[4] = 0
     _pos_1[5] = 0
-    movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20, 0, 0, 0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
+    movel(add_pose(posx(_pos_1_measure[0] + _offset_pos[0], _pos_1_measure[1] + _offset_pos[1], z_height + 20 + _pos_z_offset, 0, 0, 0), angleToAA(_pos_1_measure[2] + 180)), vel=velocity, acc=accelleration)
 
     # measure point 2 height
     _pos_2_measure = add_vector_to_pos_xy(_pos_1_measure, 0, 169)
     rotate_head_angle(_pos_1_measure[2])
-    movel(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], z_height + 20, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+    movel(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], z_height + 20 + _pos_z_offset, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
     move_until_feedback(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], 50, 0, 0, 0), angleToAA(_pos_2_measure[2])))
     _pos_2, _i = get_current_posx()
     _pos_2[3] = 0
     _pos_2[4] = 0
     _pos_2[5] = 0
-    movel(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], z_height + 20, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
+    movel(add_pose(posx(_pos_2_measure[0] + _offset_pos_inverse[0], _pos_2_measure[1] + _offset_pos_inverse[1], z_height + 20 + _pos_z_offset, 0, 0, 0), angleToAA(_pos_2_measure[2])), vel=velocity, acc=accelleration)
 
     _z_offset = (_pos_2[2] - _pos_1[2])/8
 
     get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*0, _pos[2] + 180, 10, 20, False)
 
     for i in range(8):
-        _pos = add_vector_to_pos_xy(_pos, 0, 20)
+        _pos = add_vector_to_pos_xy(_pos, 0, 20.2)
         get_to_point_by_angle(_pos[0] + _offset_pos[0], _pos[1] + _offset_pos[1], _pos_1[2] + _z_offset*i, _pos[2] + 180, 10, 20, False)
         
-    _pos = add_vector_to_pos_xy(_pos, 90, 4)  # distance from data matrix to the aluminium
-    _pos = add_vector_to_pos_xy(_pos, 0, 4)
+    _pos = add_vector_to_pos_xy(_pos, 90, -2.0)  # distance from data matrix to the aluminium
+    _pos = add_vector_to_pos_xy(_pos, 0, -2.5)   # - distance is closer to the last wall
+
+    if _mold_number == 0:
+        _pos = add_vector_to_pos_xy(_pos, 90, 0.5)  # distance from data matrix to the aluminium
+        _pos = add_vector_to_pos_xy(_pos, 0, 3.0)  # - distance is closer to the last wall
+    
     get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*8, _pos[2], 10, 20, False)
 
     for i in range(8):
-        _pos = add_vector_to_pos_xy(_pos, 180, 20)
+        _pos = add_vector_to_pos_xy(_pos, 180, 20.2)
         get_to_point_by_angle(_pos[0] + _offset_pos_inverse[0], _pos[1] + _offset_pos_inverse[1], _pos_1[2] + _z_offset*(8-i), _pos[2], 10, 20, False)
     return 0
 
@@ -265,6 +288,10 @@ def calculate_offset_center(_posx):
     _pos, _i = get_current_posx() # pose in which the robot stops and take z value 
     z2 = _pos[2]
     offset = (z1-z2)/tan(45/180*3.14) + 3.70496 # calculate offset trough formula
+    # z2 += 8        # only for the solder iron with the flat side down
+    # offset -= 4
+    z2 += 4  # only for the solder iron with the flat side
+    offset -= 6.5  # 5.5
     return offset, z2
 
 ### sometimes the robot is not that accurate so this function calculates the average offset ###
@@ -279,10 +306,6 @@ def calculate_average_offset_center(_posx):
     offset = sum(_offsets[1:-1]) / (len(_offsets) - 2)
     _z_heights.sort()
     z2 = sum(_z_heights[1:-1]) / (len(_z_heights) - 2)
-    # z2 += 8        # only for the solder iron with the flat side down
-    # offset -= 4
-    z2 += 4        # only for the solder iron with the flat side
-    offset -= 2
     return offset, z2
 
 ### function that can be called to test some lines of code ###
